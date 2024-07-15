@@ -5,14 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ConviertesDatos implements IConvierteDatos {
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public <T> T obtenerDatos(String json, Class<T> clase) {
+    public <T> T obtenerDatos(String json, Class<T> clase){
         try {
-            return mapper.readValue(json, clase);
+            return objectMapper.readValue(json, clase);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException();
         }
     }
 }
