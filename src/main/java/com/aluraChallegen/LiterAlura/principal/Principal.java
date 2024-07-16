@@ -191,7 +191,9 @@ public class Principal {
                 case 3:
                     buscarLibrosPorIdioma("fr");
                     break;
-
+                case 4:
+                    buscarLibrosPorIdioma("pt");
+                    break;
                 case 0:
                     System.out.println("Regresando ...");
                     break;
