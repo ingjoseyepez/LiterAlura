@@ -3,7 +3,8 @@ package com.aluraChallegen.LiterAlura.principal;
 import com.aluraChallegen.LiterAlura.modelo.*;
 import com.aluraChallegen.LiterAlura.repository.AutorRepository;
 import com.aluraChallegen.LiterAlura.service.ConsumiApi;
-import com.aluraChallegen.LiterAlura.service.ConviertesDatos;
+import com.aluraChallegen.LiterAlura.service.ConvierteDatos;
+
 
 import java.util.Comparator;
 import java.util.List;
@@ -15,7 +16,7 @@ public class Principal {
     private Scanner entrada = new Scanner(System.in);
     private ConsumiApi consumoApi = new ConsumiApi();
     private final String URL_BASE = "https://gutendex.com/books/";
-    private ConviertesDatos conversor = new ConviertesDatos();
+    private ConvierteDatos conversor = new ConvierteDatos();
     private AutorRepository repository;
 
 
@@ -67,29 +68,33 @@ public class Principal {
             }
         }
     }
-    private  void buscarLibroPorTitulo(){ System.out.println("Ingresa el título del libro que desea buscar");
-        var titulo =entrada.nextLine();
+    private void buscarLibroPorTitulo() {
+        System.out.println("Ingresa el título del libro que desea buscar");
+        var titulo = entrada.nextLine();
         var json = consumoApi.obtenerDatos(URL_BASE + "?search=" + titulo.replace(" ", "+").toLowerCase());
 
-        if (json.isEmpty() || !json.contains("\"count\":0,\"next\":null,\"previous\":null,\"results\":[]")) {
-            var datos = conversor.obtenerDatos(json, Datos.class);
+        // Imprime la respuesta JSON para ver lo que se recibe de la API
+        System.out.println("JSON response: " + json);
 
-            Optional<DatosLibros> libroBuscado = datos.libros().stream()
-                    .findFirst();
+        if (json.isEmpty() || json.contains("\"count\":0,\"next\":null,\"previous\":null,\"results\":[]")) {
+            System.out.println("Libro no encontrado");
+        } else {
+            try {
+                var datos = conversor.obtenerDatos(json, Datos.class);
+                Optional<DatosLibros> libroBuscado = datos.libros().stream().findFirst();
 
-            if (libroBuscado.isPresent()) {
-                System.out.println(
-                        "\n------------- LIBRO --------------" +
-                                "\nTítulo: " + libroBuscado.get().titulo() +
-                                "\nAutor: " + libroBuscado.get().autores().stream()
-                                .map(a -> a.nombre()).limit(1).collect(Collectors.joining()) +
-                                "\nIdioma: " + libroBuscado.get().idiomas().stream()
-                                .collect(Collectors.joining()) +
-                                "\nNúmero de descargas: " + libroBuscado.get().numeroDeDescargas() +
-                                "\n--------------------------------------\n"
-                );
+                if (libroBuscado.isPresent()) {
+                    System.out.println(
+                            "\n------------- LIBRO --------------" +
+                                    "\nTítulo: " + libroBuscado.get().titulo() +
+                                    "\nAutor: " + libroBuscado.get().autores().stream()
+                                    .map(a -> a.nombre()).limit(1).collect(Collectors.joining()) +
+                                    "\nIdioma: " + libroBuscado.get().idiomas().stream()
+                                    .collect(Collectors.joining()) +
+                                    "\nNúmero de descargas: " + libroBuscado.get().numeroDeDescargas() +
+                                    "\n--------------------------------------\n"
+                    );
 
-                try {
                     List<Libro> libroEncontrado = libroBuscado.stream()
                             .map(a -> new Libro(a))
                             .collect(Collectors.toList());
@@ -111,7 +116,7 @@ public class Principal {
                         Autor autor;
                         if (autorBD.isPresent()) {
                             autor = autorBD.get();
-                            System.out.println("EL autor ya esta guardado en la BD");
+                            System.out.println("EL autor ya está guardado en la BD");
                         } else {
                             autor = autorAPI;
                             repository.save(autor);
@@ -119,16 +124,15 @@ public class Principal {
                         autor.setLibros(libroEncontrado);
                         repository.save(autor);
                     }
-                } catch (Exception e) {
-                    System.out.println("Warning! " + e.getMessage());
+                } else {
+                    System.out.println("Libro no encontrado");
                 }
-            } else {
-                System.out.println("Libro no encontrado");
+            } catch (Exception e) {
+                System.out.println("Warning! " + e.getMessage());
             }
-        } else {
-            System.out.println("Libro no encontrado");
         }
     }
+
     private  void listarLibrosRegistrados(){
         List<Libro> libros = repository.librosRegistrados();
         libros.forEach(System.out::println);
@@ -169,8 +173,7 @@ public class Principal {
                 2 - Español
                 3 - Francés
                 4 - Portugués
-                5 - Alemán
-                
+        
                 0 - Regresar
                 """;
         System.out.println(menuIdiomas);
@@ -188,9 +191,7 @@ public class Principal {
                 case 3:
                     buscarLibrosPorIdioma("fr");
                     break;
-                case 4:
-                    buscarLibrosPorIdioma("pt");
-                    break;
+
                 case 0:
                     System.out.println("Regresando ...");
                     break;
